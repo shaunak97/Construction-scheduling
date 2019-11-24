@@ -1,0 +1,5 @@
+0: Insert(50,20)
+15: Insert(15,25)
+16: PrintBuilding(0,100)
+20: PrintBuilding(0,100)
+25: Insert(30,30)
