@@ -1,5 +1,4 @@
 #include <iostream>
-// #include "Timer.h"
 #include <fstream>
 #include <sys/time.h>
 #include <cstddef>
@@ -11,7 +10,11 @@ using namespace std;
 
 #define BUFFER_SIZE 2000
 
+int b,flg=0;
+int ct;
+int ins=0;
 
+//Including the data structure files in the main file
 ofstream fout;
 #include "heap.h"
 #include "rbt.h"
@@ -33,9 +36,9 @@ public:
 	void print(int buildingNum1,int buildingNum2); //Print(buildingNum,executed_time,total_time) for given range of buildingNums
 	void insert(int buildingNum, int time); //Insert buldingNum and and total time
 	construct();
-	void syncTime(int time);
-	int dispatch(int);
-	int ifbuild();
+	void syncTime(int time); //Synchronizes time between global time and counter
+	int dispatch(int); //Send building for construction
+	int ifbuild(); //Checks if any building is left to build
 
 };
 
@@ -45,10 +48,12 @@ int construct::dispatch(int x){
 	heapnode* thisnode = &(myheap->root[1]);
 
 	thisnode->exec_time+=x;
-	// cout<<"dispatch "<<thisnode->buildingNum<<" totaltime="<<thisnode->total_time<<" exec_time"<<thisnode->exec_time<<endl;
+
 	if(thisnode->total_time-thisnode->exec_time<=0){
 		retval = thisnode->exec_time-thisnode->total_time;
 
+        b=thisnode->bnum;
+        flg=1;
 		myrbt->deletenode(thisnode->twin);
 		myheap->removeMin();
 
@@ -60,18 +65,25 @@ int construct::dispatch(int x){
 void construct::syncTime(int time){
 	int param,remain;
 	while(time>counter){
-		if(time-counter < 5)
-			param = time-counter;
-		else
-			param = 5;
-		// param = (time-counter)<5?(time-counter):5;
+		if(time-counter < 5 && ins==0)
+			{
+			    param = time-counter;
+	    }
+		else{
+            param = 5;
+
+		}
+
 
 		if(ifbuild()){
 			remain = dispatch(param);
-			counter+=param-remain;
+			counter+=param-remain; ct=counter;
 		}
-		else
-			counter=time;
+		else{
+            counter=time;
+			ct=counter;
+
+		}
 
 	}
 }
@@ -79,16 +91,14 @@ construct::construct(){
 		counter=0;
 		myheap = new heap(BUFFER_SIZE);
 		myrbt = new rbt;
-		//create rbt
+
 	}
 void construct::print(int buildingNum){
-	// fout<<"printjob1"<<buildingNum;
 
 	myrbt->findnode(buildingNum);
 }
 
 void construct::print(int buildingNum1,int buildingNum2){
-	// fout<<"printjob2"<<buildingNumlow<<" "<<buildingNumhigh;
 	myrbt->inorder(buildingNum1,buildingNum2);
 
 }
@@ -109,7 +119,7 @@ void construct::insert(int buildingNum,int totaltime){
 
 
 
-int main(){
+int main(int argc, char** argv){
 
 	construct myconstruct; // create a construct object
 
@@ -117,14 +127,14 @@ int main(){
 	int num;
 	ifstream file;
 
-	//some book keeping
-//	if(argc<2){
-//		cout<<"Error: Not enough arguments"<<endl;
-//		exit(1);
-//	}
 
-	//file.open(argv[1]); // open input file
-	file.open("input.txt");
+	if(argc<2){
+		cout<<"Error: Not enough arguments"<<endl;
+		exit(1);
+	}
+
+	file.open(argv[1]); // open input file
+
 	fout.open("output_file.txt"); //open output file
 
 
@@ -138,23 +148,15 @@ int main(){
 		ptr = strtok(ptr,":");
 		num = atoi(ptr);
 
-
-		//schedule jobs until counter = command time
-		myconstruct.syncTime(num);
-
-        ptr = strtok(NULL,"(");
-
-        // Insert new job
+		ptr = strtok(NULL,"(");
         if(strcmp(ptr+1,"Insert")==0){
-        	ptr = strtok(NULL,",");
-        	temp1 = atoi(ptr);
-        	ptr = strtok(NULL,")");
-        	temp2 = atoi(ptr);
-        	myconstruct.insert(temp1,temp2);
+         ins=1;
+        }
+        else{
+            ins=0;
         }
 
-        // print jobs
-        else if(strcmp(ptr+1,"PrintBuilding")==0){
+        if(strcmp(ptr+1,"PrintBuilding")==0){
         	ptr = strtok(NULL,")");
         	int i,flag=0;
         	for(i=0;i<strlen(ptr);i++){
@@ -179,15 +181,33 @@ int main(){
 
          }
 
-        else
-        	fout<<"unknown operation"<<endl;
+		//schedule buildings until counter = command time
+		myconstruct.syncTime(num);
+
+
+
+        // Insert new building
+        if(strcmp(ptr+1,"Insert")==0){
+        	ptr = strtok(NULL,",");
+        	temp1 = atoi(ptr);
+        	ptr = strtok(NULL,")");
+        	temp2 = atoi(ptr);
+        	myconstruct.insert(temp1,temp2);
+        }
+
+
 
 
     }
-
-    // End of input file. schedule all the pending jobs
+int r;
+    // End of input file. schedule all the pending buildings
     while(myconstruct.ifbuild()){
-    	myconstruct.dispatch(100);
+    	r=myconstruct.dispatch(5);
+    	ct+=5-r;
+    	if(flg==1){
+            flg=0;
+            fout<<"("<<b<<","<<ct<<")"<<endl;
+    	}
     }
 
 

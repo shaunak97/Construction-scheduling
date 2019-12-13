@@ -1,5 +1,4 @@
 #include <iostream>
-// #include "Timer.h"
 #include <fstream>
 #include <sys/time.h>
 #include <cstddef>
@@ -11,65 +10,61 @@ using namespace std;
 
 
 
-
-//#include "rbt.h"
-
-//healper function for find prev
-void findbuild1(rbtnode *root,int jobid,rbtnode* last, int* flag)
+void findbuild1(rbtnode *root,int bnum,rbtnode* last, int* flag)
 {
     if(*flag==1)
         return;
     if (root==NULL)
         return;
 
-    findbuild1(root->left,jobid,last,flag);
-    if(root->jobid ==jobid){
+    findbuild1(root->left,bnum,last,flag);
+    if(root->bnum ==bnum){
         if(last==NULL)
             return;
         heapnode* temp2 = last->twin;
-        fout<<"("<<last->jobid<<","<<temp2->exec_time<<","<<temp2->total_time<<")"<<endl;
+        fout<<"("<<last->bnum<<","<<temp2->exec_time<<","<<temp2->total_time<<")"<<endl;
         *flag = 1;
     }
     last = root;
-    findbuild1(root->right,jobid,last,flag);
+    findbuild1(root->right,bnum,last,flag);
 }
 
-//healper function for nextnode
-void findbuild2(rbtnode *root,int jobid, int* flag){
+
+void findbuild2(rbtnode *root,int bnum, int* flag){
     if(*flag==1)
         return;
     if (root==NULL)
         return;
 
-    findbuild2(root->left,jobid,flag);
-    if(root->jobid >jobid){
+    findbuild2(root->left,bnum,flag);
+    if(root->bnum >bnum){
         heapnode* temp2 = root->twin;
-        fout<<"("<<temp2->jobID<<","<<temp2->exec_time<<","<<temp2->total_time<<")"<<endl;
+        fout<<"("<<temp2->bnum<<","<<temp2->exec_time<<","<<temp2->total_time<<")"<<endl;
         *flag=1;
         return;
     }
-    findbuild2(root->right,jobid,flag);
+    findbuild2(root->right,bnum,flag);
 }
 
 
 
 // find smallest node larger than given building number
 // find smallest node larger than given building number
-void rbt::nextnode(int jobid){
+void rbt::nextnode(int bnum){
     int flag=0;
-    findbuild2(root,jobid,&flag);
+    findbuild2(root,bnum,&flag);
 
     if(flag!=1)
         fout<<"(0,0,0)"<<endl;
 
 }
 
-// find largest node less than given jobid
-void rbt::prevnode(int jobid){
+// find largest node less than given bnum
+void rbt::prevnode(int bnum){
     int flag=0;
 
 
-    findbuild1(root,jobid,NULL,&flag);
+    findbuild1(root,bnum,NULL,&flag);
 
     if(flag==0)
         fout<<"(0,0,0)"<<endl;
@@ -79,26 +74,26 @@ void rbt::prevnode(int jobid){
 
 
 // helper function to find a node in the tree
-rbtnode* findnodeHelper(rbtnode* root,int jobid){
+rbtnode* findnodeHelper(rbtnode* root,int bnum){
     if(root==NULL)
         return NULL;
-    else if(root->jobid == jobid)
+    else if(root->bnum == bnum)
         return root;
-    else if(jobid < root->jobid)
-        return findnodeHelper(root->left,jobid);
+    else if(bnum < root->bnum)
+        return findnodeHelper(root->left,bnum);
     else
-        return findnodeHelper(root->right,jobid);
+        return findnodeHelper(root->right,bnum);
 }
 
 //method to find a node in the tree
-rbtnode* rbt::findnode(int jobid){
+rbtnode* rbt::findnode(int bnum){
 
-    rbtnode* temp = findnodeHelper(root,jobid);
+    rbtnode* temp = findnodeHelper(root,bnum);
     if(temp==NULL)
         fout<<"(0,0,0)\n";
     else{
         heapnode* temp2 = temp->twin;
-        fout<<"("<<temp2->jobID<<","<<temp2->exec_time<<","<<temp2->total_time<<")"<<endl;
+        fout<<"("<<temp2->bnum<<","<<temp2->exec_time<<","<<temp2->total_time<<")"<<endl;
     }
     return temp;
 }
@@ -109,19 +104,19 @@ void inorderHelper(rbtnode *root,int low,int high,int *flag)
 {
     if (root==NULL)
         return;
-    if(root->jobid > low)
+    if(root->bnum > low)
         inorderHelper(root->left,low,high,flag);
-    if(root->jobid >= low && root->jobid <=high){
+    if(root->bnum >= low && root->bnum <=high){
         if(*flag==0)
           *flag=1;
         else
           fout<<",";
-        fout <<"("<< root->jobid <<",";
+        fout <<"("<< root->bnum <<",";
 
         heapnode* temp = root->twin;
         fout<<temp->exec_time<<","<<temp->total_time<<")";
     }
-    if(root->jobid <high)
+    if(root->bnum <high)
         inorderHelper(root->right,low,high,flag);
 }
 
@@ -131,11 +126,11 @@ rbtnode* rbtinsert(rbtnode* root, rbtnode *ptr){
     if (root == NULL)
        return ptr;
 
-    if (ptr->jobid < root->jobid){
+    if (ptr->bnum < root->bnum){
         root->left  = rbtinsert(root->left, ptr);
         root->left->parent = root;
     }
-    else if (ptr->jobid > root->jobid){
+    else if (ptr->bnum > root->bnum){
         root->right = rbtinsert(root->right, ptr);
         root->right->parent = root;
     }
@@ -269,8 +264,8 @@ void rbt::fixtree(rbtnode *&root, rbtnode *&ptr){
 
 
 // rbt method to insert a new node
-rbtnode* rbt::insert(const int &jobid){
-    rbtnode *ptr = new rbtnode(jobid);
+rbtnode* rbt::insert(const int &bnum){
+    rbtnode *ptr = new rbtnode(bnum);
     rbtnode* bk = ptr;
    // bst insert
     root = rbtinsert(root, ptr);
@@ -346,7 +341,7 @@ void rbt::deletenode(rbtnode* p){
      if(y!=p)
      {
          p->color=y->color;
-         p->jobid=y->jobid;
+         p->bnum=y->bnum;
          p->twin = y->twin;
 
          struct heapnode* temp;

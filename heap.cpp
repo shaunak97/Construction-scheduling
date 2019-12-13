@@ -1,5 +1,4 @@
 #include <iostream>
-// #include "Timer.h"
 #include <fstream>
 #include <sys/time.h>
 #include <cstddef>
@@ -10,10 +9,6 @@ using namespace std;
 
 
 
-
-
-//#include "heap.h"
-
 // constructor for heap class. allocates heap of size BUFFER_SIZE
 heap::heap(int size){
 	root = new heapnode[size];
@@ -23,30 +18,35 @@ heap::heap(int size){
 
 
 void heap::execute(int x){
-	// function to execute the jobs
+	// function to execute the building construction
 	root[1].exec_time+=x;
+
 
 	heapify();
 }
 
-// method to swap two jobs
+// method to swap two buildings
 void heap::swapbuilding(struct heapnode* a,struct heapnode* b){
 
-	int jobID,exec_time,total_time;
+	int bnum,exec_time,total_time;
 	rbtnode *tmp1,*tmp2;
 	// heapnode* tmp;
-	jobID = a->jobID;
-	a->jobID = b->jobID;
-	b->jobID = jobID;
+	//Swapping building numbers
+	bnum = a->bnum;
+	a->bnum = b->bnum;
+	b->bnum = bnum;
 
+	//swapping execution times
 	exec_time = a->exec_time;
 	a->exec_time = b->exec_time;
 	b->exec_time = exec_time;
 
+    //swapping total construction times
 	total_time = a->total_time;
 	a->total_time = b->total_time;
 	b->total_time = total_time;
 
+    //Swapping respective Red black tree pointers
 	tmp1 = a->twin;
 	tmp2 = b->twin;
 
@@ -62,16 +62,16 @@ void heap::swapbuilding(struct heapnode* a,struct heapnode* b){
 
 
 // insert new node into the heap
-heapnode* heap::insert(int jobID,int exec_time,int total_time,rbtnode* p){
+heapnode* heap::insert(int bnum,int exec_time,int total_time,rbtnode* p){
 
 	int ptr = ++last;
 
-	if(last==size){ // if heap is full, double the array
+	if(last==size){
 		size*=2;
 		root = (struct heapnode*)realloc(root,sizeof(struct heapnode)*size);
 	}
 
-	root[last].jobID = jobID;
+	root[last].bnum = bnum;
 	root[last].exec_time = exec_time;
 	root[last].total_time = total_time;
 	root[last].twin = p;
@@ -112,6 +112,15 @@ void heap::heapify(){
 			swapbuilding(&root[i],&root[j]);
 			i = j;
 		}
+		else if(root[j].exec_time == root[i].exec_time){
+            if(root[i].bnum<=root[j].bnum){
+                break;
+            }
+            else{
+                swapbuilding(&root[i],&root[j]);
+                i = j;
+            }
+		}
 		else
 			break;
 
@@ -124,12 +133,11 @@ struct heapnode* heap::removeMin(){
 	int i=1;
 
 	struct heapnode *result = new heapnode;
-
-	result->jobID = root[i].jobID;
+	result->bnum = root[i].bnum;
 	result->exec_time = root[i].exec_time;
 	result->total_time = root[i].total_time;
 
-	root[i].jobID = root[last].jobID;
+	root[i].bnum = root[last].bnum;
 	root[i].exec_time = root[last].exec_time;
 	root[i].total_time = root[last].total_time;
 
